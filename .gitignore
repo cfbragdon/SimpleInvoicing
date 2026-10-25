@@ -1,0 +1,42 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+
+# --- Database: real invoices, clients, bank details ---
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
+instance/
+
+# --- Secrets and local settings ---
+.env
+.env.*
+!.env.example
+
+# --- Generated files: exports, printed invoices, backups ---
+exports/
+backups/
+*.log
+
+# --- Testing ---
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- Editor and operating system ---
+.vscode/
+Thumbs.db
+desktop.ini
+.DS_Store
