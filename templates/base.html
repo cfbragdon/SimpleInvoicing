@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Simple Invoicing{% endblock %}</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        table { border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 0.3em 0.6em; text-align: left; }
+        .number { text-align: right; }
+        .error { color: #b00020; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <p><a href="{{ url_for('index') }}">Simple Invoicing</a></p>
+    {% block content %}{% endblock %}
+</body>
+</html>

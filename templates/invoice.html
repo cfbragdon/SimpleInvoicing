@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Invoice {{ invoice.number }}{% endblock %}
+{% block content %}
+    <h1>Invoice {{ invoice.number }}</h1>
+    <p>Client: {{ invoice.client_name }}</p>
+    <p>Invoice date: {{ invoice.invoice_date | date }}</p>
+    <table>
+        <tr><th>Line</th><th>Description</th><th>Quantity</th><th>Unit price</th><th>Amount</th></tr>
+        {% for line in lines %}
+        <tr>
+            <td>{{ line.position }}</td>
+            <td>{{ line.description }}</td>
+            <td class="number">{{ line.quantity_hundredths | quantity }}</td>
+            <td class="number">{{ line.unit_price_cents | money }}</td>
+            <td class="number">{{ line.amount_cents | money }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <th colspan="4">Total</th>
+            <th class="number">{{ invoice.total_cents | money }}</th>
+        </tr>
+    </table>
+    <p><a href="{{ url_for('new_invoice') }}">New invoice</a></p>
+{% endblock %}

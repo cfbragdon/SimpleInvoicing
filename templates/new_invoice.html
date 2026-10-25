@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}New invoice{% endblock %}
+{% block content %}
+    <h1>New invoice</h1>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <form method="post">
+        <p>
+            <label>Client name<br>
+                <input type="text" name="client_name" value="{{ form.client_name }}" size="40"></label>
+        </p>
+        <p>
+            <label>Invoice date<br>
+                <input type="date" name="invoice_date" value="{{ form.invoice_date }}"></label>
+        </p>
+        <table>
+            <tr><th>Line</th><th>Description</th><th>Quantity</th><th>Unit price</th></tr>
+            {% for row in rows %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td><input type="text" name="description_{{ loop.index0 }}" value="{{ row.description }}" size="40"></td>
+                <td><input type="text" name="quantity_{{ loop.index0 }}" value="{{ row.quantity }}" size="8"></td>
+                <td><input type="text" name="price_{{ loop.index0 }}" value="{{ row.price }}" size="10"></td>
+            </tr>
+            {% endfor %}
+        </table>
+        <p><button type="submit">Save invoice</button></p>
+    </form>
+{% endblock %}
