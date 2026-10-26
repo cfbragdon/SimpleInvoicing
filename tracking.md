@@ -13,13 +13,13 @@ Tracks progress against [PLAN.md](PLAN.md). Updated at each stage commit.
 | 4 | Validation | ✅ Done | `99424cf` |
 | 5 | Due date and persistence check | ✅ Done | `65ebbdb` |
 | 6 | Money formatting | ✅ Done | `c240fda` |
-| 7 | Duplicate an invoice | ✅ Done | this commit |
+| 7 | Duplicate an invoice | ✅ Done | `158d2d5` |
 
 ## Bronze requirements
 
 | # | Requirement | Status | Notes |
 |---|---|---|---|
-| B1 | Create an invoice with client, date and lines | ✅ Done | Stage 2. Form with 10 line rows |
+| B1 | Create an invoice with client, date and lines | ✅ Done | Stage 2. Form with 10 line rows. Client name required since `5330214` |
 | B2 | Line amounts and invoice total calculated | ✅ Done | Stage 2. `Decimal`, `ROUND_HALF_UP`, each line rounded then summed |
 | B3 | Next invoice number assigned automatically | ✅ Done | Built in Stage 2, tested in Stage 3. Numbering continues correctly after a restart |
 | B4 | Invoice list, newest first | ✅ Done | Stage 3. Home page lists invoices by number, highest first, each linking to the invoice |
@@ -87,10 +87,19 @@ Browser test, confirmed passed by the user:
 
 - Duplicated invoices appeared on the list with sequential numbers and matching client, date and total; the duplicate's due date was verified.
 
+## B1 correction: client name required (`5330214`)
+
+The final Bronze audit found that an invoice could be saved without a client name. A new invoice is now refused with "Please enter the client name." when the name is empty or only spaces, and nothing is saved. Existing invoices were not affected (none had an empty name).
+
+Automated: 66 checks, all passed. The 10 new checks cover empty, spaces-only and tab-and-spaces names refused, typed lines kept, the client error listed together with date and line errors, a valid name saved with surrounding spaces trimmed, and B1–B4 again (three-line invoice, amounts and total, consecutive numbers, newest-first list). The Stage 4–7 checks (B5–B9) still pass.
+
+Browser test, confirmed passed by the user:
+
+- Empty client name → "Please enter the client name."
+
 ## Known limitations
 
 - No upper limit on amounts; absurdly large values (around 17+ digits) can fail when saving. Not required by the plan.
-- The client name may be left empty. Not required by the plan.
 - A due date earlier than the invoice date is accepted. Not required by the plan.
 - Quantities are shown with a dot for decimals (e.g. `1.5`); the KM format applies to amounts only.
 - Typed amounts with thousands separators (e.g. `1.250,00`) are refused; enter `1250` instead.

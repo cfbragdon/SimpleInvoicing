@@ -2,7 +2,7 @@
 
 A simple local invoicing app, built for Assignment 4 of the BILD-AI training program.
 
-> **Status:** planning only. No application code exists yet.
+> **Status:** Bronze complete. Stages 0–7 are built and committed, plus a correction from the final audit requiring a client name on new invoices. Progress and test results are in [tracking.md](tracking.md).
 
 ---
 
