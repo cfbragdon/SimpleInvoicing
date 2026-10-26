@@ -84,7 +84,16 @@ def format_date(iso_text):
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    conn = get_db()
+    try:
+        # Newest first: the highest number is the most recently created invoice.
+        invoices = conn.execute(
+            "SELECT number, client_name, invoice_date, total_cents"
+            " FROM invoices ORDER BY number DESC"
+        ).fetchall()
+    finally:
+        conn.close()
+    return render_template("index.html", invoices=invoices)
 
 
 @app.route("/invoices/new", methods=["GET", "POST"])

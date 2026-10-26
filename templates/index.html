@@ -1,6 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
-    <h1>Simple Invoicing</h1>
-    <p>The app is running.</p>
+    <h1>Invoices</h1>
     <p><a href="{{ url_for('new_invoice') }}">New invoice</a></p>
+    {% if invoices %}
+    <table>
+        <tr><th>Number</th><th>Client</th><th>Date</th><th>Total</th></tr>
+        {% for invoice in invoices %}
+        <tr>
+            <td><a href="{{ url_for('show_invoice', number=invoice.number) }}">{{ invoice.number }}</a></td>
+            <td>{{ invoice.client_name }}</td>
+            <td>{{ invoice.invoice_date | date }}</td>
+            <td class="number">{{ invoice.total_cents | money }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>No invoices yet.</p>
+    {% endif %}
 {% endblock %}
