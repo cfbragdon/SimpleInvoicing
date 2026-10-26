@@ -79,6 +79,39 @@ def line_amount(quantity, price):
     return (quantity * price).quantize(CENT, rounding=ROUND_HALF_UP)
 
 
+def save_invoice(client_name, invoice_date, due_date, lines):
+    """Save an invoice under the next number and return that number.
+
+    Each line is (description, quantity_hundredths, unit_price_cents, amount_cents).
+    """
+    total_cents = sum(line[3] for line in lines)
+    conn = get_db()
+    try:
+        with conn:
+            conn.execute("BEGIN IMMEDIATE")  # lock so two saves cannot take the same number
+            number = conn.execute(
+                "SELECT COALESCE(MAX(number), 0) + 1 FROM invoices"
+            ).fetchone()[0]
+            invoice_id = conn.execute(
+                "INSERT INTO invoices (number, client_name, invoice_date, due_date, total_cents)"
+                " VALUES (?, ?, ?, ?, ?)",
+                (number, client_name, invoice_date.isoformat(),
+                 due_date.isoformat(), total_cents),
+            ).lastrowid
+            conn.executemany(
+                "INSERT INTO invoice_lines (invoice_id, position, description,"
+                " quantity_hundredths, unit_price_cents, amount_cents)"
+                " VALUES (?, ?, ?, ?, ?, ?)",
+                [
+                    (invoice_id, position, *line)
+                    for position, line in enumerate(lines, start=1)
+                ],
+            )
+    finally:
+        conn.close()
+    return number
+
+
 @app.template_filter("money")
 def format_money(cents):
     """Whole cents as 1.250,00 KM: dot for thousands, comma for decimals."""
@@ -171,36 +204,40 @@ def new_invoice():
     if errors:
         return render_template("new_invoice.html", form=form, rows=rows, errors=errors)
 
-    total = sum(amount for _, _, _, amount in lines)
+    number = save_invoice(
+        form["client_name"], invoice_date, due_date,
+        [
+            (description, int(quantity * 100), int(price * 100), int(amount * 100))
+            for description, quantity, price, amount in lines
+        ],
+    )
+    return redirect(url_for("show_invoice", number=number))
 
+
+@app.route("/invoices/<int:number>/duplicate", methods=["POST"])
+def duplicate_invoice(number):
     conn = get_db()
     try:
-        with conn:
-            conn.execute("BEGIN IMMEDIATE")  # lock so two saves cannot take the same number
-            number = conn.execute(
-                "SELECT COALESCE(MAX(number), 0) + 1 FROM invoices"
-            ).fetchone()[0]
-            invoice_id = conn.execute(
-                "INSERT INTO invoices (number, client_name, invoice_date, due_date, total_cents)"
-                " VALUES (?, ?, ?, ?, ?)",
-                (number, form["client_name"], invoice_date.isoformat(),
-                 due_date.isoformat(), int(total * 100)),
-            ).lastrowid
-            conn.executemany(
-                "INSERT INTO invoice_lines (invoice_id, position, description,"
-                " quantity_hundredths, unit_price_cents, amount_cents)"
-                " VALUES (?, ?, ?, ?, ?, ?)",
-                [
-                    (invoice_id, position, description, int(quantity * 100),
-                     int(price * 100), int(amount * 100))
-                    for position, (description, quantity, price, amount)
-                    in enumerate(lines, start=1)
-                ],
-            )
+        original = conn.execute(
+            "SELECT * FROM invoices WHERE number = ?", (number,)
+        ).fetchone()
+        if original is None:
+            abort(404)
+        lines = conn.execute(
+            "SELECT description, quantity_hundredths, unit_price_cents, amount_cents"
+            " FROM invoice_lines WHERE invoice_id = ? ORDER BY position",
+            (original["id"],),
+        ).fetchall()
     finally:
         conn.close()
 
-    return redirect(url_for("show_invoice", number=number))
+    # The copy is dated today, with the default due date from today.
+    today = date.today()
+    new_number = save_invoice(
+        original["client_name"], today, today + timedelta(days=DUE_DAYS),
+        [tuple(line) for line in lines],
+    )
+    return redirect(url_for("show_invoice", number=new_number))
 
 
 @app.route("/invoices/<int:number>")

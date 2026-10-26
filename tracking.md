@@ -12,8 +12,8 @@ Tracks progress against [PLAN.md](PLAN.md). Updated at each stage commit.
 | 3 | Numbering tests and the invoice list | ✅ Done | `f23a025` |
 | 4 | Validation | ✅ Done | `99424cf` |
 | 5 | Due date and persistence check | ✅ Done | `65ebbdb` |
-| 6 | Money formatting | ✅ Done | this commit |
-| 7 | Duplicate an invoice | ⬜ Not started | |
+| 6 | Money formatting | ✅ Done | `c240fda` |
+| 7 | Duplicate an invoice | ✅ Done | this commit |
 
 ## Bronze requirements
 
@@ -27,7 +27,7 @@ Tracks progress against [PLAN.md](PLAN.md). Updated at each stage commit.
 | B6 | Invoices persist after restarting the app | ✅ Done | Saved in SQLite since Stage 2. Restart confirmed in Stage 5 |
 | B7 | Due date, 15 days after the invoice date unless changed | ✅ Done | Stage 5. Optional due date field; left blank it is the invoice date + 15 days. Shown on the invoice page |
 | B8 | Amounts shown as `1.250,00 KM` | ✅ Done | Stage 6. One shared function formats every amount; calculations and stored cents unchanged |
-| B9 | Duplicate an invoice | ⬜ Not started | Stage 7 |
+| B9 | Duplicate an invoice | ✅ Done | Stage 7. "Duplicate this invoice" button: copies client and lines with the next number, today's date and a due date of today + 15 days. The original is not changed |
 
 ## Stage 2 browser test results
 
@@ -79,6 +79,14 @@ Browser test, confirmed passed by the user:
 
 - Price 1250 → amounts shown as `1.250,00 KM`.
 
+## Stage 7 test results
+
+Automated: 56 checks, all passed. The Stage 4, 5 and 6 checks still pass. The 16 new checks cover the button, the next number, same client, today's date, due date today + 15, identical lines and total, the original unchanged, the copy listed first, duplicating a copy, an unknown invoice refused, a direct visit to the duplicate address not creating a copy, and duplicating on a copy of the real database with all existing invoices unchanged.
+
+Browser test, confirmed passed by the user:
+
+- Duplicated invoices appeared on the list with sequential numbers and matching client, date and total; the duplicate's due date was verified.
+
 ## Known limitations
 
 - No upper limit on amounts; absurdly large values (around 17+ digits) can fail when saving. Not required by the plan.
@@ -86,3 +94,4 @@ Browser test, confirmed passed by the user:
 - A due date earlier than the invoice date is accepted. Not required by the plan.
 - Quantities are shown with a dot for decimals (e.g. `1.5`); the KM format applies to amounts only.
 - Typed amounts with thousands separators (e.g. `1.250,00`) are refused; enter `1250` instead.
+- Each click of "Duplicate this invoice" creates another copy, and copies cannot be edited (editing is Silver S1, not built).
