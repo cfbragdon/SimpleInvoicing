@@ -166,6 +166,8 @@ def new_invoice():
 
     # Every problem is collected so they can all be fixed in one go.
     errors = []
+    if not form["client_name"]:  # already stripped, so whitespace-only is empty
+        errors.append("Please enter the client name.")
     try:
         invoice_date = date.fromisoformat(form["invoice_date"])
     except ValueError:
