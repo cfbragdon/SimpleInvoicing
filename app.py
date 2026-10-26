@@ -55,11 +55,23 @@ def parse_amount(text):
     """Turn typed text into a Decimal with at most two decimals, or None."""
     try:
         value = Decimal(text.strip().replace(",", "."))
-    except InvalidOperation:
-        return None
-    if not value.is_finite() or value != value.quantize(CENT):
+        if not value.is_finite() or value != value.quantize(CENT):
+            return None
+    except InvalidOperation:  # also raised by quantize for huge values such as 1e30
         return None
     return value
+
+
+def check_amount(position, label, text):
+    """Return (value, error) for a quantity or price typed on a line."""
+    if not text:
+        return None, f"Line {position}: please enter a {label}."
+    value = parse_amount(text)
+    if value is None:
+        return None, f"Line {position}: the {label} must be a number with at most two decimals."
+    if value < 0:
+        return None, f"Line {position}: the {label} cannot be negative."
+    return value, None
 
 
 def line_amount(quantity, price):
@@ -101,7 +113,7 @@ def new_invoice():
     if request.method == "GET":
         form = {"client_name": "", "invoice_date": date.today().isoformat()}
         rows = [{"description": "", "quantity": "", "price": ""}] * LINE_ROWS
-        return render_template("new_invoice.html", form=form, rows=rows, error=None)
+        return render_template("new_invoice.html", form=form, rows=rows, errors=[])
 
     form = {
         "client_name": request.form.get("client_name", "").strip(),
@@ -116,29 +128,36 @@ def new_invoice():
         for i in range(LINE_ROWS)
     ]
 
-    error = None
+    # Every problem is collected so they can all be fixed in one go.
+    errors = []
+    try:
+        invoice_date = date.fromisoformat(form["invoice_date"])
+    except ValueError:
+        errors.append("Please enter the invoice date.")
+
     lines = []
     for position, row in enumerate(rows, start=1):
         if not (row["description"] or row["quantity"] or row["price"]):
             continue  # completely empty rows are ignored
-        quantity = parse_amount(row["quantity"])
-        price = parse_amount(row["price"])
-        if quantity is None or price is None:
-            error = f"Line {position}: quantity and price must be numbers with at most two decimals."
-            break
-        lines.append((row["description"], quantity, price, line_amount(quantity, price)))
+        line_errors = []
+        if not row["description"]:
+            line_errors.append(f"Line {position}: please enter a description.")
+        quantity, error = check_amount(position, "quantity", row["quantity"])
+        if error:
+            line_errors.append(error)
+        price, error = check_amount(position, "price", row["price"])
+        if error:
+            line_errors.append(error)
+        if line_errors:
+            errors.extend(line_errors)
+        else:
+            lines.append((row["description"], quantity, price, line_amount(quantity, price)))
 
-    if error is None and not lines:
-        error = "Please enter at least one line."
+    if not errors and not lines:
+        errors.append("Please enter at least one line.")
 
-    if error is None:
-        try:
-            invoice_date = date.fromisoformat(form["invoice_date"])
-        except ValueError:
-            error = "Please enter the invoice date."
-
-    if error:
-        return render_template("new_invoice.html", form=form, rows=rows, error=error)
+    if errors:
+        return render_template("new_invoice.html", form=form, rows=rows, errors=errors)
 
     total = sum(amount for _, _, _, amount in lines)
     # The due date field arrives in Stage 5; until then it is the default.

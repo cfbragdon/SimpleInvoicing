@@ -9,8 +9,8 @@ Tracks progress against [PLAN.md](PLAN.md). Updated at each stage commit.
 | 0 | Project setup: `.gitignore` and `PLAN.md` | ✅ Done | `5bec93c` |
 | 1 | Minimal working app, database setup, Windows launcher | ✅ Done | `4c069fe` |
 | 2 | Create an invoice with lines and calculations | ✅ Done | `8ef0293` |
-| 3 | Numbering tests and the invoice list | ✅ Done | this commit |
-| 4 | Validation | ⬜ Not started | |
+| 3 | Numbering tests and the invoice list | ✅ Done | `f23a025` |
+| 4 | Validation | ✅ Done | this commit |
 | 5 | Due date and persistence check | ⬜ Not started | |
 | 6 | Money formatting | ⬜ Not started | |
 | 7 | Duplicate an invoice | ⬜ Not started | |
@@ -23,7 +23,7 @@ Tracks progress against [PLAN.md](PLAN.md). Updated at each stage commit.
 | B2 | Line amounts and invoice total calculated | ✅ Done | Stage 2. `Decimal`, `ROUND_HALF_UP`, each line rounded then summed |
 | B3 | Next invoice number assigned automatically | ✅ Done | Built in Stage 2, tested in Stage 3. Numbering continues correctly after a restart |
 | B4 | Invoice list, newest first | ✅ Done | Stage 3. Home page lists invoices by number, highest first, each linking to the invoice |
-| B5 | Refuse invalid lines with a clear message | 🟡 Partial | Stage 2 refuses non-numeric values, more than two decimals and a missing date. Negative values and missing descriptions come in Stage 4 |
+| B5 | Refuse invalid lines with a clear message | ✅ Done | Stage 4. Missing description, negative, missing or invalid quantity or price, and missing date are refused. Every problem is listed, naming the line, and nothing is saved |
 | B6 | Invoices persist after restarting the app | 🟡 Partial | Saved in SQLite. Restart test in Stage 5 |
 | B7 | Due date, 15 days after the invoice date unless changed | 🟡 Partial | The default is saved but not shown yet. Field and display in Stage 5 |
 | B8 | Amounts shown as `1.250,00 KM` | ⬜ Not started | Stage 6. Amounts currently show as `1250.00` |
@@ -47,3 +47,21 @@ All passed and were confirmed by the user:
 - After restarting the app, Invoice 5 received the correct next number.
 - The list shows the correct clients, dates, totals and order.
 - Clicking an invoice number opens the correct invoice.
+
+## Stage 4 test results
+
+Automated: 16 checks run with Flask's test client against a temporary database, all passed. They cover each refusal case, several errors at once, typed values kept, rejected invoices not saved, an empty row between filled rows, zero values, and the Stage 2 total of 297.50.
+
+Browser tests, confirmed passed by the user:
+
+- Missing description (quantity 2, price 10) → "Line 1: please enter a description.", nothing saved.
+- Quantity −1 → "Line 1: the quantity cannot be negative."
+- Price −5 → "Line 1: the price cannot be negative."
+- Quantity `abc` → "Line 1: the quantity must be a number with at most two decimals."
+- Errors on lines 2 and 3 at once → all three messages shown together.
+- Valid invoice with an empty row between two filled rows → saved with the next number, total 260.00.
+
+## Known limitations
+
+- No upper limit on amounts; absurdly large values (around 17+ digits) can fail when saving. Not required by the plan.
+- The client name may be left empty. Not required by the plan.
