@@ -111,13 +111,14 @@ def index():
 @app.route("/invoices/new", methods=["GET", "POST"])
 def new_invoice():
     if request.method == "GET":
-        form = {"client_name": "", "invoice_date": date.today().isoformat()}
+        form = {"client_name": "", "invoice_date": date.today().isoformat(), "due_date": ""}
         rows = [{"description": "", "quantity": "", "price": ""}] * LINE_ROWS
         return render_template("new_invoice.html", form=form, rows=rows, errors=[])
 
     form = {
         "client_name": request.form.get("client_name", "").strip(),
         "invoice_date": request.form.get("invoice_date", "").strip(),
+        "due_date": request.form.get("due_date", "").strip(),
     }
     rows = [
         {
@@ -134,6 +135,15 @@ def new_invoice():
         invoice_date = date.fromisoformat(form["invoice_date"])
     except ValueError:
         errors.append("Please enter the invoice date.")
+    else:
+        # Left blank, the due date is 15 days after the invoice date.
+        if not form["due_date"]:
+            due_date = invoice_date + timedelta(days=DUE_DAYS)
+        else:
+            try:
+                due_date = date.fromisoformat(form["due_date"])
+            except ValueError:
+                errors.append("Please enter a valid due date, or leave it blank.")
 
     lines = []
     for position, row in enumerate(rows, start=1):
@@ -160,8 +170,6 @@ def new_invoice():
         return render_template("new_invoice.html", form=form, rows=rows, errors=errors)
 
     total = sum(amount for _, _, _, amount in lines)
-    # The due date field arrives in Stage 5; until then it is the default.
-    due_date = invoice_date + timedelta(days=DUE_DAYS)
 
     conn = get_db()
     try:

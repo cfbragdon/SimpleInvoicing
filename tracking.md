@@ -10,8 +10,8 @@ Tracks progress against [PLAN.md](PLAN.md). Updated at each stage commit.
 | 1 | Minimal working app, database setup, Windows launcher | ✅ Done | `4c069fe` |
 | 2 | Create an invoice with lines and calculations | ✅ Done | `8ef0293` |
 | 3 | Numbering tests and the invoice list | ✅ Done | `f23a025` |
-| 4 | Validation | ✅ Done | this commit |
-| 5 | Due date and persistence check | ⬜ Not started | |
+| 4 | Validation | ✅ Done | `99424cf` |
+| 5 | Due date and persistence check | ✅ Done | this commit |
 | 6 | Money formatting | ⬜ Not started | |
 | 7 | Duplicate an invoice | ⬜ Not started | |
 
@@ -24,8 +24,8 @@ Tracks progress against [PLAN.md](PLAN.md). Updated at each stage commit.
 | B3 | Next invoice number assigned automatically | ✅ Done | Built in Stage 2, tested in Stage 3. Numbering continues correctly after a restart |
 | B4 | Invoice list, newest first | ✅ Done | Stage 3. Home page lists invoices by number, highest first, each linking to the invoice |
 | B5 | Refuse invalid lines with a clear message | ✅ Done | Stage 4. Missing description, negative, missing or invalid quantity or price, and missing date are refused. Every problem is listed, naming the line, and nothing is saved |
-| B6 | Invoices persist after restarting the app | 🟡 Partial | Saved in SQLite. Restart test in Stage 5 |
-| B7 | Due date, 15 days after the invoice date unless changed | 🟡 Partial | The default is saved but not shown yet. Field and display in Stage 5 |
+| B6 | Invoices persist after restarting the app | ✅ Done | Saved in SQLite since Stage 2. Restart confirmed in Stage 5 |
+| B7 | Due date, 15 days after the invoice date unless changed | ✅ Done | Stage 5. Optional due date field; left blank it is the invoice date + 15 days. Shown on the invoice page |
 | B8 | Amounts shown as `1.250,00 KM` | ⬜ Not started | Stage 6. Amounts currently show as `1250.00` |
 | B9 | Duplicate an invoice | ⬜ Not started | Stage 7 |
 
@@ -61,7 +61,18 @@ Browser tests, confirmed passed by the user:
 - Errors on lines 2 and 3 at once → all three messages shown together.
 - Valid invoice with an empty row between two filled rows → saved with the next number, total 260.00.
 
+## Stage 5 test results
+
+Automated: 26 checks, all passed. The 16 Stage 4 checks still pass. The 10 new checks cover the blank default (01.10.2026 → 16.10.2026), a changed due date (30.10.2026), the default across a year end (20.12.2026 → 04.01.2027), an invalid due date refused, a restart simulated by reopening the database in a new process, and all existing invoices displaying with a due date (run on a copy of the database).
+
+Browser tests, confirmed passed by the user:
+
+- Invoice dated 01.10.2026 with the due date blank → due date 16.10.2026.
+- Invoice dated 01.10.2026 with due date 30.10.2026 entered → 30.10.2026 saved and shown.
+- Both invoices still there after closing and restarting the app.
+
 ## Known limitations
 
 - No upper limit on amounts; absurdly large values (around 17+ digits) can fail when saving. Not required by the plan.
 - The client name may be left empty. Not required by the plan.
+- A due date earlier than the invoice date is accepted. Not required by the plan.

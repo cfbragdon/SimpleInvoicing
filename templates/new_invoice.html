@@ -19,6 +19,11 @@
             <label>Invoice date<br>
                 <input type="date" name="invoice_date" value="{{ form.invoice_date }}"></label>
         </p>
+        <p>
+            <label>Due date<br>
+                <input type="date" name="due_date" value="{{ form.due_date }}"></label>
+            <br><small>Leave blank for 15 days after the invoice date.</small>
+        </p>
         <table>
             <tr><th>Line</th><th>Description</th><th>Quantity</th><th>Unit price</th></tr>
             {% for row in rows %}
