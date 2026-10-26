@@ -11,8 +11,8 @@ Tracks progress against [PLAN.md](PLAN.md). Updated at each stage commit.
 | 2 | Create an invoice with lines and calculations | ✅ Done | `8ef0293` |
 | 3 | Numbering tests and the invoice list | ✅ Done | `f23a025` |
 | 4 | Validation | ✅ Done | `99424cf` |
-| 5 | Due date and persistence check | ✅ Done | this commit |
-| 6 | Money formatting | ⬜ Not started | |
+| 5 | Due date and persistence check | ✅ Done | `65ebbdb` |
+| 6 | Money formatting | ✅ Done | this commit |
 | 7 | Duplicate an invoice | ⬜ Not started | |
 
 ## Bronze requirements
@@ -26,7 +26,7 @@ Tracks progress against [PLAN.md](PLAN.md). Updated at each stage commit.
 | B5 | Refuse invalid lines with a clear message | ✅ Done | Stage 4. Missing description, negative, missing or invalid quantity or price, and missing date are refused. Every problem is listed, naming the line, and nothing is saved |
 | B6 | Invoices persist after restarting the app | ✅ Done | Saved in SQLite since Stage 2. Restart confirmed in Stage 5 |
 | B7 | Due date, 15 days after the invoice date unless changed | ✅ Done | Stage 5. Optional due date field; left blank it is the invoice date + 15 days. Shown on the invoice page |
-| B8 | Amounts shown as `1.250,00 KM` | ⬜ Not started | Stage 6. Amounts currently show as `1250.00` |
+| B8 | Amounts shown as `1.250,00 KM` | ✅ Done | Stage 6. One shared function formats every amount; calculations and stored cents unchanged |
 | B9 | Duplicate an invoice | ⬜ Not started | Stage 7 |
 
 ## Stage 2 browser test results
@@ -71,8 +71,18 @@ Browser tests, confirmed passed by the user:
 - Invoice dated 01.10.2026 with due date 30.10.2026 entered → 30.10.2026 saved and shown.
 - Both invoices still there after closing and restarting the app.
 
+## Stage 6 test results
+
+Automated: 40 checks, all passed. The Stage 4 and Stage 5 checks still pass (three Stage 4 checks updated to expect the new format, e.g. `297,50 KM`). The 14 new checks cover the format itself (`1.250,00 KM`, `0,50 KM`, `1.000.000,00 KM`, `0,00 KM` and others), price 1250 on the invoice page and list, half-up rounding shown as `0,38 KM`, stored cents unchanged, and all existing invoices showing formatted totals (run on a copy of the database).
+
+Browser test, confirmed passed by the user:
+
+- Price 1250 → amounts shown as `1.250,00 KM`.
+
 ## Known limitations
 
 - No upper limit on amounts; absurdly large values (around 17+ digits) can fail when saving. Not required by the plan.
 - The client name may be left empty. Not required by the plan.
 - A due date earlier than the invoice date is accepted. Not required by the plan.
+- Quantities are shown with a dot for decimals (e.g. `1.5`); the KM format applies to amounts only.
+- Typed amounts with thousands separators (e.g. `1.250,00`) are refused; enter `1250` instead.

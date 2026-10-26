@@ -81,7 +81,9 @@ def line_amount(quantity, price):
 
 @app.template_filter("money")
 def format_money(cents):
-    return f"{Decimal(cents) / 100:.2f}"
+    """Whole cents as 1.250,00 KM: dot for thousands, comma for decimals."""
+    text = f"{Decimal(cents) / 100:,.2f}"  # 1,250.00
+    return text.replace(",", " ").replace(".", ",").replace(" ", ".") + " KM"
 
 
 @app.template_filter("quantity")
